@@ -1,0 +1,82 @@
+version: '3.9'
+services:
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certbot_data:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    depends_on:
+      - frontend
+      - payload
+    restart: unless-stopped
+    networks:
+      - internal
+
+  frontend:
+    build:
+      context: ./frontend
+      target: runner
+    environment:
+      - NODE_ENV=production
+      - PAYLOAD_API_URL=http://payload:3000/api
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - NEXT_PUBLIC_SITE_URL=https://www.radimkocian.cz
+    depends_on:
+      - payload
+    restart: unless-stopped
+    networks:
+      - internal
+
+  payload:
+    build: ./payload
+    environment:
+      - DATABASE_URI=postgres://payload:${DB_PASSWORD}@postgres:5432/payload
+      - REDIS_URL=redis://redis:6379
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET}
+      - NODE_ENV=production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - internal
+    volumes:
+      - payload_uploads:/app/uploads
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=payload
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=payload
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payload -d payload"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - internal
+
+volumes:
+  pgdata:
+  payload_uploads:
+  certbot_data:
+  certbot_www:
+
+networks:
+  internal:
