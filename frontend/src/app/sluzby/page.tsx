@@ -1,5 +1,7 @@
 import { fetchAPI } from '@/lib/api';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Sluzby() {
   const data = await fetchAPI('/products?where[type][equals]=sluzba&depth=1');
   const produkty = data.docs;

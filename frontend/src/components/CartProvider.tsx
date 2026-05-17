@@ -1,6 +1,7 @@
 'use client';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { ReactNode } from 'react';
 
 export interface CartItem {
   productId: string;
@@ -35,3 +36,7 @@ export const useCartStore = create<CartState>()(
     { name: 'kocian-cart' }
   )
 );
+
+export default function CartProvider({ children }: { children: ReactNode }) {
+  return <>{children}</>;
+}

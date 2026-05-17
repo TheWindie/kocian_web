@@ -1,6 +1,8 @@
 import { fetchAPI } from '@/lib/api';
 import { notFound } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default async function BlogPost({ params }: { params: { slug: string } }) {
   const data = await fetchAPI(`/blog?where[slug][equals]=${params.slug}&depth=2`);
   if (!data.docs.length) notFound();

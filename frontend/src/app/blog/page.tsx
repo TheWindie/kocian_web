@@ -1,6 +1,8 @@
 import { fetchAPI } from '@/lib/api';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Blog() {
   const data = await fetchAPI('/blog?sort=-publishedDate&depth=1');
   const posts = data.docs;
